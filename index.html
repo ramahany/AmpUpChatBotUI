@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AmpUp Chat Assistant</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="top-bar">
+      <div class="field">
+        <label for="sessionId">session_id</label>
+        <input id="sessionId" type="text" placeholder="e.g. my_session" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="userId">user_id</label>
+        <input id="userId" type="text" placeholder="e.g. client_user" autocomplete="off">
+      </div>
+      <div class="hint">Allowed: letters (A-Z, a-z) and underscore (_)</div>
+    </section>
+
+    <section class="chat-shell">
+      <div id="messages" class="messages"></div>
+      <p id="errorText" class="error-text"></p>
+      <form id="composerForm" class="composer">
+        <textarea
+          id="chatInput"
+          placeholder="Type your message..."
+          rows="1"
+          aria-label="Chat input"
+        ></textarea>
+        <button id="sendBtn" type="submit">Send</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
