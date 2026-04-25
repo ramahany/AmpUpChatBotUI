@@ -36,6 +36,90 @@ function appendMessage(text, role, options = {}) {
   return bubble;
 }
 
+function formatSourceScore(score) {
+  const numericScore = Number(score);
+  if (!Number.isFinite(numericScore)) {
+    return "N/A";
+  }
+  return numericScore.toFixed(3);
+}
+
+function normalizeSources(sources) {
+  if (!Array.isArray(sources)) {
+    return [];
+  }
+
+  return sources
+    .map((source, index) => {
+      if (!Array.isArray(source)) {
+        return null;
+      }
+
+      const [link, title, score] = source;
+      if (!link || !title) {
+        return null;
+      }
+
+      return {
+        id: `${index}-${link}`,
+        link: String(link),
+        title: String(title),
+        score
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildSourcesSection(sources) {
+  const normalizedSources = normalizeSources(sources);
+  if (normalizedSources.length === 0) {
+    return null;
+  }
+
+  const sourcesWrap = document.createElement("div");
+  sourcesWrap.className = "sources-wrap";
+
+  const heading = document.createElement("div");
+  heading.className = "sources-heading";
+  heading.textContent = `Sources (${normalizedSources.length})`;
+  sourcesWrap.appendChild(heading);
+
+  const list = document.createElement("div");
+  list.className = "sources-list";
+
+  normalizedSources.forEach((source, index) => {
+    const details = document.createElement("details");
+    details.className = "source-card";
+
+    const summary = document.createElement("summary");
+    summary.className = "source-summary";
+    summary.textContent = source.title;
+    details.appendChild(summary);
+
+    const body = document.createElement("div");
+    body.className = "source-details";
+
+    const score = document.createElement("div");
+    score.className = "source-score";
+    score.textContent = `Score: ${formatSourceScore(source.score)}`;
+    body.appendChild(score);
+
+    const anchor = document.createElement("a");
+    anchor.className = "source-link";
+    anchor.href = source.link;
+    anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
+    anchor.textContent = source.link;
+    body.appendChild(anchor);
+
+    details.appendChild(body);
+    list.appendChild(details);
+  });
+
+  sourcesWrap.appendChild(list);
+  return sourcesWrap;
+}
+
 function createThinkingBubble() {
   const bubble = document.createElement("div");
   bubble.className = "bubble bot";
@@ -115,8 +199,14 @@ async function sendMessage(userText) {
     const data = await response.json();
     // Expected placeholder shape: { bot_msg: "..." }
     const botText = data.bot_msg || data.response || "No bot message returned.";
+    const sources = data.sources;
     thinkingBubble.remove();
-    appendMessage(botText, "bot", { markdown: true });
+    const botBubble = appendMessage(botText, "bot", { markdown: true });
+    const sourcesSection = buildSourcesSection(sources);
+    if (sourcesSection) {
+      botBubble.appendChild(sourcesSection);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
   } catch (error) {
     thinkingBubble.remove();
     appendMessage(
