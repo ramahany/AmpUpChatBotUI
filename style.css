@@ -137,6 +137,48 @@ body {
   padding-top: 8px;
 }
 
+.followups-wrap {
+  margin-top: 8px;
+  border-top: 1px solid rgba(124, 58, 237, 0.18);
+  padding-top: 8px;
+}
+
+.followups-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.followups-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.followup-card {
+  border: 1px solid #d7c4ff;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #3f2c78;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+
+.followup-card:hover {
+  border-color: #b692ff;
+  background: #ffffff;
+}
+
+.followup-card:active {
+  transform: translateY(1px);
+}
+
 .sources-heading {
   font-size: 0.75rem;
   font-weight: 700;

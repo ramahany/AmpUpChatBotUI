@@ -1,5 +1,5 @@
 // Replace with your real backend endpoint when ready.
-const API_ENDPOINT = "https://web-production-f4213.up.railway.app/api/v1/chat/";
+const API_ENDPOINT = "http://127.0.0.1:8000/api/v1/chat/";
 const ID_PATTERN = /^[A-Za-z_]+$/;
 
 const messagesEl = document.getElementById("messages");
@@ -30,7 +30,7 @@ function markdownToSafeHtml(markdownText) {
 function appendMessage(text, role, options = {}) {
   const bubble = document.createElement("div");
   bubble.className = `bubble ${role}`;
-  bubble.innerHTML =  marked.parse(text);
+  bubble.innerHTML = marked.parse(text);
   messagesEl.appendChild(bubble);
   messagesEl.scrollTop = messagesEl.scrollHeight;
   return bubble;
@@ -51,23 +51,92 @@ function normalizeSources(sources) {
 
   return sources
     .map((source, index) => {
-      if (!Array.isArray(source)) {
-        return null;
+      if (Array.isArray(source)) {
+        const [link, title, score] = source;
+        if (!link) {
+          return null;
+        }
+
+        return {
+          id: `${index}-${link}`,
+          link: String(link),
+          title: String(title || link),
+          score
+        };
       }
 
-      const [link, title, score] = source;
-      if (!link || !title) {
-        return null;
+      if (typeof source === "string" && source.trim()) {
+        return {
+          id: `${index}-${source}`,
+          link: source,
+          title: source,
+          score: null
+        };
       }
 
-      return {
-        id: `${index}-${link}`,
-        link: String(link),
-        title: String(title),
-        score
-      };
+      if (source && typeof source === "object") {
+        const link = source.link || source.url || source.href;
+        const title = source.title || source.name || link;
+        if (!link) {
+          return null;
+        }
+
+        return {
+          id: `${index}-${link}`,
+          link: String(link),
+          title: String(title),
+          score: source.score
+        };
+      }
+
+      return null;
     })
     .filter(Boolean);
+}
+
+function normalizeFollowUps(followUpQuestions) {
+  if (!Array.isArray(followUpQuestions)) {
+    return [];
+  }
+
+  return followUpQuestions
+    .map((question) => (typeof question === "string" ? question.trim() : ""))
+    .filter(Boolean);
+}
+
+function buildFollowUpsSection(followUpQuestions) {
+  const normalizedFollowUps = normalizeFollowUps(followUpQuestions);
+  if (normalizedFollowUps.length === 0) {
+    return null;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "followups-wrap";
+
+  const heading = document.createElement("div");
+  heading.className = "followups-heading";
+  heading.textContent = "Suggested follow-ups";
+  wrap.appendChild(heading);
+
+  const list = document.createElement("div");
+  list.className = "followups-list";
+
+  normalizedFollowUps.forEach((question) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "followup-card";
+    button.textContent = question;
+    button.addEventListener("click", () => {
+      if (sendBtnEl.disabled) return;
+      chatInputEl.value = question;
+      autoResizeTextarea();
+      formEl.requestSubmit();
+    });
+    list.appendChild(button);
+  });
+
+  wrap.appendChild(list);
+  return wrap;
 }
 
 function buildSourcesSection(sources) {
@@ -197,16 +266,20 @@ async function sendMessage(userText) {
     }
 
     const data = await response.json();
-    // Expected placeholder shape: { bot_msg: "..." }
-    const botText = data.bot_msg || data.response || "No bot message returned.";
-    const sources = data.sources;
+    const botText = data.response || data.bot_msg || "No bot message returned.";
+    const followUpQuestions = data.follow_up_questions;
+    const sources = data.sources || data.links || data.source_links || [];
     thinkingBubble.remove();
     const botBubble = appendMessage(botText, "bot", { markdown: true });
+    const followUpsSection = buildFollowUpsSection(followUpQuestions);
+    if (followUpsSection) {
+      botBubble.appendChild(followUpsSection);
+    }
     const sourcesSection = buildSourcesSection(sources);
     if (sourcesSection) {
       botBubble.appendChild(sourcesSection);
-      messagesEl.scrollTop = messagesEl.scrollHeight;
     }
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   } catch (error) {
     thinkingBubble.remove();
     appendMessage(
