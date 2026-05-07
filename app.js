@@ -1,5 +1,5 @@
 // Replace with your real backend endpoint when ready.
-const API_ENDPOINT = "http://127.0.0.1:8000/api/v1/chat/";
+const API_ENDPOINT = "https://web-production-f4213.up.railway.app/api/v1/chat/";
 const ID_PATTERN = /^[A-Za-z_]+$/;
 
 const messagesEl = document.getElementById("messages");
