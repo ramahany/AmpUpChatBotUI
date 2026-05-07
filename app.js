@@ -1,14 +1,25 @@
 // Replace with your real backend endpoint when ready.
-const API_ENDPOINT = "https://web-production-f4213.up.railway.app/api/v1/chat/";
+const API_ENDPOINT = "http://127.0.0.1:8000/api/v1/chat/";
 const ID_PATTERN = /^[A-Za-z_]+$/;
 
 const messagesEl = document.getElementById("messages");
 const sessionIdEl = document.getElementById("sessionId");
 const userIdEl = document.getElementById("userId");
+const troubleshootingTrueEl = document.getElementById("troubleshootingTrue");
+const implementationTrueEl = document.getElementById("implementationTrue");
 const chatInputEl = document.getElementById("chatInput");
 const formEl = document.getElementById("composerForm");
 const sendBtnEl = document.getElementById("sendBtn");
 const errorTextEl = document.getElementById("errorText");
+
+function enforceExclusiveToggles(changedToggle) {
+  if (changedToggle === troubleshootingTrueEl && troubleshootingTrueEl.checked) {
+    implementationTrueEl.checked = false;
+  }
+  if (changedToggle === implementationTrueEl && implementationTrueEl.checked) {
+    troubleshootingTrueEl.checked = false;
+  }
+}
 
 function markdownToSafeHtml(markdownText) {
   if (typeof marked === "undefined") {
@@ -243,10 +254,17 @@ function validateIdsBeforeSend() {
 }
 
 async function sendMessage(userText) {
+  const troubleshootingEnabled = troubleshootingTrueEl.checked;
+  const implementationEnabled = troubleshootingEnabled
+    ? false
+    : implementationTrueEl.checked;
+
   const payload = {
     session_id: sessionIdEl.value.trim(),
     user_id: userIdEl.value.trim(),
-    user_msg: userText
+    user_msg: userText,
+    Troubleshooting: troubleshootingEnabled,
+    Implementation: implementationEnabled
   };
 
   appendMessage(userText, "user", { markdown: true });
@@ -323,6 +341,12 @@ formEl.addEventListener("submit", async (event) => {
 });
 
 chatInputEl.addEventListener("input", autoResizeTextarea);
+troubleshootingTrueEl.addEventListener("change", () =>
+  enforceExclusiveToggles(troubleshootingTrueEl)
+);
+implementationTrueEl.addEventListener("change", () =>
+  enforceExclusiveToggles(implementationTrueEl)
+);
 chatInputEl.addEventListener("keydown", (event) => {
   if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
